@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import ResumeTailorView from './components/ResumeTailorView';
+import InterviewPrepView from './components/InterviewPrepView';
+import LearningHubView from './components/LearningHubView';
+import AskQuestionModal from './components/AskQuestionModal';
 import ResumeUploader from './components/ResumeUploader';
 import ResumePreview from './components/ResumePreview';
 import JobSearchPanel from './components/JobSearchPanel';
@@ -14,13 +18,17 @@ import SettingsModal from './components/SettingsModal';
 import { api } from './services/api';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('tailor'); // 'tailor' | 'interview' | 'learn' | 'jobs'
   const [activeResume, setActiveResume] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [settings, setSettings] = useState(null);
   const [isScraping, setIsScraping] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
   // Modals state
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [matchJob, setMatchJob] = useState(null);
   const [bulletsJob, setBulletsJob] = useState(null);
   const [coverLetterJob, setCoverLetterJob] = useState(null);
@@ -28,6 +36,18 @@ export default function App() {
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Global Ctrl+K / Cmd+K listener for Search Modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearchModal(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Load initial data
   useEffect(() => {
@@ -40,7 +60,10 @@ export default function App() {
         ]);
 
         if (resResume) setActiveResume(resResume);
-        if (resJobs) setJobs(resJobs);
+        if (resJobs && resJobs.length > 0) {
+          setJobs(resJobs);
+          setSelectedJob(resJobs[0]);
+        }
         if (resSettings) setSettings(resSettings);
       } catch (err) {
         console.error('Initialization error:', err);
@@ -51,7 +74,7 @@ export default function App() {
 
   const handleResumeUploaded = (parsedResume) => {
     setActiveResume(parsedResume);
-    // Automatically trigger match scoring if jobs exist
+    setShowUploader(false);
     if (jobs.length > 0) {
       handleRunMatching();
     }
@@ -69,7 +92,9 @@ export default function App() {
     try {
       const newJobs = await api.scrapeJobs(params);
       setJobs(newJobs);
-      // If we have an active resume, score the new jobs automatically!
+      if (newJobs.length > 0 && !selectedJob) {
+        setSelectedJob(newJobs[0]);
+      }
       if (activeResume) {
         const scoredJobs = await api.matchAllJobs();
         setJobs(scoredJobs);
@@ -99,6 +124,7 @@ export default function App() {
 
   const handleJobAdded = async (job) => {
     setJobs((prev) => [job, ...prev]);
+    setSelectedJob(job);
     if (activeResume) {
       const scoredJobs = await api.matchAllJobs();
       setJobs(scoredJobs);
@@ -110,6 +136,7 @@ export default function App() {
       try {
         await api.clearAllJobs();
         setJobs([]);
+        setSelectedJob(null);
       } catch (err) {
         alert(err.message);
       }
@@ -119,6 +146,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab)}
+        onOpenSearch={() => setShowSearchModal(true)}
         activeResume={activeResume}
         jobsCount={jobs.length}
         settings={settings}
@@ -126,72 +156,135 @@ export default function App() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
-        {/* Top Hero Section */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20">
-                Full-Stack Intelligent Job Hunter
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-2.5">
-                AI Job Scraper & ATS Resume Matcher
-              </h1>
-              <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-                Scrape live tech openings, evaluate ATS keyword compatibility & skill gaps, and auto-generate tailored bullets and cover letters.
-              </p>
-            </div>
+        
+        {/* Secondary Bar: Active Profile Toggle (Allows changing uploaded resume anytime) */}
+        <div className="mb-6 flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span className="text-slate-400">Active Candidate Profile:</span>
+            <strong className="text-white">
+              {activeResume?.contact?.name || activeResume?.filename || 'Alex Morgan (Starter Profile)'}
+            </strong>
           </div>
+          <button
+            onClick={() => setShowUploader(!showUploader)}
+            className="text-brand-400 hover:text-brand-300 font-semibold transition-colors"
+          >
+            {showUploader ? 'Hide Uploader' : 'Upload / Replace My Resume PDF/DOCX →'}
+          </button>
         </div>
 
-        {/* Section 1: Resume Upload & Extraction */}
-        <ResumeUploader
-          onResumeUploaded={handleResumeUploaded}
-          currentResume={activeResume}
-        />
+        {/* Collapsible Resume Uploader Drawer */}
+        {showUploader && (
+          <div className="mb-8 space-y-6 animate-in fade-in duration-150">
+            <ResumeUploader
+              onResumeUploaded={handleResumeUploaded}
+              currentResume={activeResume}
+            />
+            <ResumePreview
+              resume={activeResume}
+              onResumeUpdated={handleResumeUpdated}
+            />
+          </div>
+        )}
 
-        {/* Active Resume Details & Skill Taxonomy Cloud */}
-        <ResumePreview
-          resume={activeResume}
-          onResumeUpdated={handleResumeUpdated}
-        />
+        {/* TAB 1: ATS RESUME TAILOR & JOB CHANCES */}
+        {activeTab === 'tailor' && (
+          <ResumeTailorView
+            activeResume={activeResume}
+            jobs={jobs}
+            selectedJob={selectedJob}
+            onSelectJob={(job) => setSelectedJob(job)}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
 
-        {/* Section 2: Live Job Scraper & Actions */}
-        <JobSearchPanel
-          onScrapeJobs={handleScrapeJobs}
-          onOpenUrlModal={() => setShowUrlModal(true)}
-          onOpenManualModal={() => setShowManualModal(true)}
-          onRunMatching={handleRunMatching}
-          onClearJobs={handleClearJobs}
-          isScraping={isScraping}
-          isMatching={isMatching}
-          jobsCount={jobs.length}
-          hasActiveResume={!!activeResume}
-        />
+        {/* TAB 2: INTERVIEW PREPARATION */}
+        {activeTab === 'interview' && (
+          <InterviewPrepView
+            activeJob={selectedJob || (jobs.length > 0 ? jobs[0] : null)}
+            activeResume={activeResume}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
 
-        {/* Section 3: Job Listings with Match Scores */}
-        <JobList
-          jobs={jobs}
-          onSelectMatch={(job) => setMatchJob(job)}
-          onOpenBullets={(job) => setBulletsJob(job)}
-          onOpenCoverLetter={(job) => setCoverLetterJob(job)}
-          onOpenInterviewPrep={(job) => setInterviewPrepJob(job)}
-          activeResume={activeResume}
-        />
+        {/* TAB 3: BEGINNER-FRIENDLY SKILL & PROJECT ACADEMY */}
+        {activeTab === 'learn' && (
+          <LearningHubView
+            activeJob={selectedJob || (jobs.length > 0 ? jobs[0] : null)}
+            activeResume={activeResume}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
+
+        {/* TAB 4: JOB BOARD & SCRAPER */}
+        {activeTab === 'jobs' && (
+          <div className="space-y-8">
+            <JobSearchPanel
+              onScrapeJobs={handleScrapeJobs}
+              onOpenUrlModal={() => setShowUrlModal(true)}
+              onOpenManualModal={() => setShowManualModal(true)}
+              onRunMatching={handleRunMatching}
+              onClearJobs={handleClearJobs}
+              isScraping={isScraping}
+              isMatching={isMatching}
+              jobsCount={jobs.length}
+              hasActiveResume={!!activeResume}
+            />
+
+            <JobList
+              jobs={jobs}
+              onSelectMatch={(job) => {
+                setSelectedJob(job);
+                setMatchJob(job);
+              }}
+              onOpenBullets={(job) => {
+                setSelectedJob(job);
+                setBulletsJob(job);
+              }}
+              onOpenCoverLetter={(job) => {
+                setSelectedJob(job);
+                setCoverLetterJob(job);
+              }}
+              onOpenInterviewPrep={(job) => {
+                setSelectedJob(job);
+                setActiveTab('interview');
+              }}
+              activeResume={activeResume}
+            />
+          </div>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
-        <p>AI Job Scraper & Resume Matcher • Powered by FastAPI & React • Dual Engine: Local Heuristic & Google Gemini GenAI</p>
+        <p>TailorATS & AI Career Copilot • Dual Engine: Local Heuristic & Google Gemini GenAI • ATS Single-Column Certified</p>
       </footer>
 
-      {/* Modals */}
+      {/* Global Ask Question Modal */}
+      <AskQuestionModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        activeJob={selectedJob || (jobs.length > 0 ? jobs[0] : null)}
+        activeResume={activeResume}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setShowSearchModal(false);
+        }}
+      />
+
+      {/* Existing Feature Modals */}
       {matchJob && (
         <MatchModal
           job={matchJob}
           onClose={() => setMatchJob(null)}
           onOpenBullets={(job) => setBulletsJob(job)}
           onOpenCoverLetter={(job) => setCoverLetterJob(job)}
-          onOpenInterviewPrep={(job) => setInterviewPrepJob(job)}
+          onOpenInterviewPrep={(job) => {
+            setMatchJob(null);
+            setSelectedJob(job);
+            setActiveTab('interview');
+          }}
         />
       )}
 
@@ -239,3 +332,4 @@ export default function App() {
     </div>
   );
 }
+

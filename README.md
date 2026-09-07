@@ -1,30 +1,36 @@
-# AI Job Scraper & Resume Matcher
+# TailorATS: AI Resume Tailor, Match Odds & Career Copilot
 
-An intelligent, full-stack platform designed to automate the job search and application preparation workflow. It features real-time job scraping across developer job boards, ATS resume parsing, skills gap analysis, and Generative AI for customized resume bullet points, cover letters, and interview preparation.
+An intelligent, full-stack career platform that tailors resumes to any target Job Description (JD) with strict ATS-compliant single-column formatting, generates matching projects and skills, calculates your interview probability / chances of getting hired with actionable gap analysis, provides a dedicated interview preparation center with interactive mock evaluation, offers a beginner-friendly learning academy to master the suggested skills and projects from scratch, and includes a global search button (`Ctrl+K`) for asking any career question.
 
 ---
 
-## Key Features
+## Key Capabilities
 
-- **Multi-Source Job Scraper & Ingestion**:
+- **ATS Resume Tailor & Odds Estimator**:
+  - Automatically analyzes any target Job Description and tailors your full resume.
+  - **Suggested Skills**: Extracted and categorized (Core Skills, Languages & Frameworks, Cloud & DevOps, Databases & Architecture) directly aligned to the JD.
+  - **Suggested Technical Projects**: Generates 2-3 production-grade, highly relevant projects tailored to the JD stack, complete with architectural summaries and quantified accomplishment bullets (Google XYZ formula).
+  - **Interview Probability & Match Odds Calculator**: Computes your odds of landing an interview (e.g. 84% - High Probability) with granular breakdown across skills, keywords, experience, and projects.
+  - **Recruiter Gap Analysis**: Outlines key strengths, risk warnings/red flags, and an actionable checklist to boost your chances to 95%+.
+  - **ATS-Friendly Export**: Strict single-column layout, standard headers, no tables or text boxes. 1-Click Copy Clean Text, Download Markdown (.md), or Print / Save as Clean ATS PDF.
+- **Dedicated Interview Preparation Center**:
+  - Filter by category: Technical Stack, Project Defense, Behavioral (STAR), Tricky & Gap Questions, and Questions to Ask the Interviewer.
+  - Question diagnostic cards showing Interviewer Intent, Pitfalls to Avoid, and Winning Model Answers.
+  - **Interactive Mock Simulator**: Type your answer to any question and get instant AI Bar Raiser evaluation (score 1-10, strengths, missing points, and upgraded model answer).
+- **Beginner-Friendly Skill & Project Academy**:
+  - **Teach Me the Skills**: ELI5 (Explain Like I'm 5) intuitive analogies, real-world production use cases, 10-minute crash courses, live code snippets, and interview talking scripts.
+  - **Teach Me the Projects**: Plain-English system architecture diagrams, 4-phase step-by-step build guides (with runnable code), 60-second elevator pitches to memorize, and project defense Q&A.
+- **Global Search Button & AI Copilot (`Ctrl+K`)**:
+  - Prominent search button in the Navbar or `Ctrl+K` keyboard shortcut.
+  - Ask ANY question about your resume, project architecture, interview answers, or tech concepts with instant AI answers and suggested follow-ups.
+- **Multi-Source Job Scraper & Board**:
   - Live scrapers for **RemoteOK**, **Jobicy**, and **Arbeitnow**.
   - **URL Extractor**: Paste any job link from Greenhouse, Lever, LinkedIn, or company career portals to extract details automatically with Trafilatura.
   - **Manual Job Creator**: Add custom job postings for ad-hoc 1-on-1 resume alignment.
-- **ATS Resume Parser & Skills Taxonomy**:
-  - Supports **PDF**, **DOCX**, **TXT**, or direct plain text pasting.
-  - Automatically identifies candidate contact details (Email, Phone, LinkedIn, GitHub).
-  - Categorizes skills across Languages, Frameworks, Cloud & DevOps, Databases, and Methodologies.
-  - Computes an **ATS Health Score** with actionable formatting and keyword feedback.
 - **Hybrid Matching Engine**:
-  - **100% Offline Capability**: Uses TF-IDF cosine similarity, skill set overlap heuristics, and seniority detection. Works with zero external API keys.
-  - **Google Gemini GenAI Mode**: When a Gemini API key is configured (via the UI or `.env`), it unlocks deep contextual analysis, automated bullet point rewrites, customized cover letters, and interview prep.
-- **AI Career Copilot**:
-  - **Tailor Resume Bullets**: Generates high-impact, quantifiable bullet points aligned to the specific job description.
-  - **Cover Letter Generator**: Drafts personalized 3-4 paragraph letters in multiple tones (Professional, Enthusiastic, Concise, Technical) with 1-click copy & download.
-  - **Interview Prep**: Generates 5 tailored technical and behavioral questions with interviewer objectives and winning answer strategies.
-- **Modern Responsive Dashboard**:
-  - Dark-mode interface built with React, Vite, and Tailwind CSS.
-  - Filter jobs by minimum match score (e.g. 70%+, 80%+), search terms, and remote status.
+  - **100% Offline Capability**: Runs with intelligent heuristic algorithms, comprehensive taxonomies, and built-in knowledge bases with zero external API keys required.
+  - **Google Gemini GenAI Mode**: When a Gemini API key is configured (via Settings or `.env`), it unlocks deep contextual analysis, automated bullet point rewrites, customized cover letters, and interview prep.
+
 
 ---
 

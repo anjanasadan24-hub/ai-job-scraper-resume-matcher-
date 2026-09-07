@@ -82,4 +82,33 @@ export const api = {
     method: 'POST',
     body: { job_id: jobId }
   }),
+
+  // Advanced ATS Resume Tailor & Odds
+  tailorFullResume: (payload = {}) => request('/ai/tailor-full-resume', {
+    method: 'POST',
+    body: payload
+  }),
+
+  // Deep Interview Prep & Mock Evaluator
+  getDeepInterviewPrep: (payload = {}) => request('/ai/interview-prep-deep', {
+    method: 'POST',
+    body: payload
+  }),
+  evaluateAnswer: (payload) => request('/ai/evaluate-answer', {
+    method: 'POST',
+    body: payload
+  }),
+
+  // Beginner-Friendly Learning Academy
+  getLearningContent: (payload = {}) => request('/ai/learn-skills-projects', {
+    method: 'POST',
+    body: payload
+  }),
+
+  // Global Search & Career Assistant
+  askQuestion: (payload) => request('/ai/ask-question', {
+    method: 'POST',
+    body: payload
+  }),
 };
+

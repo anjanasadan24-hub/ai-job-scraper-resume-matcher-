@@ -83,7 +83,64 @@ def test_api():
     prep_data = res.json()
     print(f"[PASS] /api/ai/interview-prep generated interview guide using engine: {prep_data['source']}")
 
-    print("\nALL API ENDPOINTS TESTED AND VERIFIED SUCCESSFULLY!")
+    # 8. Test Advanced ATS Tailored Resume & Chances
+    res = client.post("/api/ai/tailor-full-resume", json={"job_id": job_id})
+    assert res.status_code == 200, f"Tailor full resume failed: {res.text}"
+    tailor_res = res.json()
+    assert "suggested_skills" in tailor_res
+    assert "suggested_projects" in tailor_res
+    assert len(tailor_res["suggested_projects"]) >= 2
+    assert "job_chances" in tailor_res
+    assert tailor_res["job_chances"]["probability_percentage"] > 0
+    assert "ats_formatted_text" in tailor_res
+    print(f"[PASS] /api/ai/tailor-full-resume verified: {len(tailor_res['suggested_projects'])} projects, ATS score: {tailor_res['ats_score']}, Odds: {tailor_res['job_chances']['probability_percentage']}%")
+
+    # 9. Test Deep Interview Prep
+    res = client.post("/api/ai/interview-prep-deep", json={"job_id": job_id})
+    assert res.status_code == 200, f"Deep interview prep failed: {res.text}"
+    deep_prep = res.json()
+    assert len(deep_prep["questions"]) >= 5
+    print(f"[PASS] /api/ai/interview-prep-deep generated {len(deep_prep['questions'])} deep questions with STAR & model answers.")
+
+    # 10. Test Mock Answer Evaluator
+    mock_payload = {
+        "question": "How do you diagnose memory leaks in production?",
+        "user_answer": "I check heap metrics in APM, isolate unclosed database connections in PostgreSQL, and add unit tests to verify memory cleanup.",
+        "job_title": "Staff Backend Engineer",
+        "category": "technical_skill"
+    }
+    res = client.post("/api/ai/evaluate-answer", json=mock_payload)
+    assert res.status_code == 200, f"Evaluate answer failed: {res.text}"
+    eval_data = res.json()
+    assert eval_data["score"] >= 1
+    assert len(eval_data["strengths"]) > 0
+    print(f"[PASS] /api/ai/evaluate-answer scored candidate answer: {eval_data['score']}/10 ({eval_data['rating']})")
+
+    # 11. Test Beginner Learning Academy
+    res = client.post("/api/ai/learn-skills-projects", json={"job_id": job_id})
+    assert res.status_code == 200, f"Learn skills projects failed: {res.text}"
+    academy_data = res.json()
+    assert len(academy_data["skills_tutorials"]) >= 3
+    assert len(academy_data["project_tutorials"]) >= 1
+    print(f"[PASS] /api/ai/learn-skills-projects returned {len(academy_data['skills_tutorials'])} ELI5 skill guides and {len(academy_data['project_tutorials'])} project blueprints.")
+
+    # 12. Test Ask Career Question
+    ask_payload = {
+        "query": "How do I explain Redis in an interview?",
+        "job_id": job_id,
+        "context_type": "general"
+    }
+    res = client.post("/api/ai/ask-question", json=ask_payload)
+    assert res.status_code == 200, f"Ask question failed: {res.text}"
+    ask_data = res.json()
+    assert len(ask_data["answer"]) > 50
+    assert len(ask_data["suggested_followups"]) > 0
+    print(f"[PASS] /api/ai/ask-question answered successfully with {len(ask_data['suggested_followups'])} follow-up suggestions.")
+
+    print("\n============================================================")
+    print("ALL API ENDPOINTS (INCLUDING 5 NEW AI COPILOT SUITES) PASSED!")
+    print("============================================================")
 
 if __name__ == "__main__":
     test_api()
+

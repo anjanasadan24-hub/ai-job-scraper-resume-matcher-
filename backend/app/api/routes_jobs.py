@@ -122,13 +122,15 @@ def create_manual_job(payload: ManualJobRequest):
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    import uuid
+    unique_id = f"manual_{uuid.uuid4().hex[:10]}"
     cursor.execute("""
     INSERT INTO jobs (
         external_id, source, title, company, location, is_remote,
         description, requirements_json, tags_json, salary, apply_url
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        f"manual_{int(cursor.lastrowid or 1) + 1000}",
+        unique_id,
         "Manual Entry",
         payload.title,
         payload.company,
